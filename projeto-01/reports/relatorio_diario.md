@@ -17,3 +17,8 @@
 - O tratamento dos valores nulos será feito conforme o impacto em futuras análises.
 
 ---
+
+## Atividades Realizadas - Data: 2025-06-12
+- Na tabela `clientes`, detectei **24 células vazias** na coluna **salário anual**. A estratégia adotada foi criar uma nova coluna chamada **salario_corrigido** e preencher com a mediana (valor: 51382).
+- Na tabela `compras`, identifiquei **7 células vazias** na coluna **ID dos clientes**. A estratégia adotada foi remover as células pois a análise RFM, o id_cliente é essencial.
+- iniciar o tratamento de dados duplicados: verificar se existem duplicatas nas tabelas.
