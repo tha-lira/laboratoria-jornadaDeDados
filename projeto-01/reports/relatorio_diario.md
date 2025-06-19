@@ -1,83 +1,118 @@
 # Relatório Diário - Projeto de Análise de Dados – O Mercado
 
-# Relatório Diário - Projeto de Análise de Dados – O Mercado
+## Atividades Realizadas – Data: 2025-06-10
+- Acessei a plataforma oficial do projeto e revisei o escopo da primeira etapa.
+- Baixei e organizei as três planilhas fornecidas: `clientes`, `transacoes` e `resumo_compras`.
+- Criei uma estrutura de pastas no Google Drive para armazenar os arquivos e manter a organização dos dados.
+- Configurei um repositório no GitHub para versionamento e documentação do projeto.
+- Iniciei a etapa de **conexão e importação de dados** entre planilhas no Google Sheets, conforme solicitado no escopo.
+- Utilizei a função `IMPORTRANGE` combinada com `QUERY` para trazer os dados de forma dinâmica e automatizada:
 
-## Atividades Realizadas - Data: 2025-06-10
-- Fiz login na plataforma do projeto.
-- Baixei e organizei as planilhas de dados.
-- Iniciei a etapa de conexão e importação de dados conforme a meta, usando a função:
-  - `IMPORTRANGE` para importar dados entre planilhas do Google Sheets.
-- Organizei as pastas no Google Drive e configurei o repositório no GitHub para versionamento.
-
+  ```
+  =QUERY(IMPORTRANGE("URL_DA_PLANILHA"; "NOME_DA_ABA!INTERVALO"); "SELECT *"; 1)
+  ```
 ---
 
 ## Atividades Realizadas - Data: 2025-06-11
-- Analisei as tabelas do projeto e identifiquei valores nulos utilizando:
-  - `COUNTBLANK(intervalo)` para contar células vazias.
-- Na tabela `clientes`, detectei **24 células vazias** na coluna **salario_anual_dolar**.
-- Na tabela `transacoes`, detectei **7 células vazias** na coluna **id_cliente**.
-- Registrei essas inconsistências para tratamento posterior.
+- Realizei uma análise inicial das tabelas do projeto com foco na detecção de valores nulos. Para isso, utilizei as fórmulas `COUNTA()` e `COUNTBLANK()` para verificar a presença de células preenchidas e vazias, respectivamente.
 
----
+- Na tabela `clientes`, identifiquei uma inconsistência na coluna `salario_anual_dolar`:
+  - A fórmula `=COUNTA(E2:E2241)` indicava menos valores do que o total esperado.
+  - Para confirmar, utilizei `=COUNTBLANK(E2:E2241)` e detectei **24 células vazias**.
+  - Posteriormente, filtrei essas linhas para visualização dos registros incompletos, mas ainda não realizei alterações nos dados.
+
+- Na tabela `transacoes`, repeti a análise para identificar inconsistências:
+  - A fórmula `=COUNTA(B2:B22128)` indicava menos valores do que o total esperado.
+  - Para confirmar, utilizei `=COUNTBLANK(B2:B22128)` e detectei **7 células vazias**.
+  - Como a tabela original é importada via `IMPORTRANGE` (que não permite edição direta), criei uma nova aba filtrada para poder manipular os dados sem alterar a fonte original:
+
+  ```excel
+  =FILTER(
+    transacoes_original!A1:D;
+    (transacoes_original!A1:A <> "") *
+    (transacoes_original!B1:B <> "") *
+    (transacoes_original!C1:C <> "") *
+    (transacoes_original!D1:D <> "")
+  )
+  ```
+
+- Na tabela `resumo_compras`, não foram encontradas células vazias.
 
 ## Atividades Realizadas - Data: 2025-06-12
-- Tratei os valores nulos:
-  - Substituí os 24 valores nulos de salário anual por 0, usando substituição direta na planilha.
-  - Excluí as 7 linhas na tabela `transacoes` onde o `id_cliente` estava nulo.
-- Iniciei a verificação de duplicados usando:
-  - `COUNTIF(intervalo; valor)` para identificar valores repetidos.
+- Iniciei a verificação de registros duplicados utilizando:
+
+  ```excel
+  =ARRAYFORMULA(IF(A2:A22128=""; ""; IF(COUNTIF(A2:A22128; A2:A22128) > 1; "Duplicado"; "Único")))
+  ```
+
+- **Explicação da abordagem**:
+  - A fórmula analisa cada valor na coluna A e verifica se ocorre mais de uma vez. Se sim, marca como `"Duplicado"`; caso contrário, `"Único"`. Ignora células vazias.
+
+- Para validar, criei um gráfico de rosca que indicou **0,9% de duplicatas**.
+- Filtrei as 9 duplicações identificadas e criei uma nova aba tratada:
+
+  ```excel
+  =FILTER(
+    resumo_compras_original!A1:G;
+    (ROW(resumo_compras_original!A1:A) < 2242) + (ROW(resumo_compras_original!A1:A) > 2250)
+  )
+  ```
 
 ---
 
 ## Atividades Realizadas - Data: 2025-06-13
-- Removi 8 linhas duplicadas da tabela `resumo_compras`.
-- Ajustei os formatos das colunas para:
-  - Número: formato numérico padrão.
-  - Data: formato de data padrão do Google Sheets.
-- Garantindo a consistência dos dados para análises futuras.
+- Padronizei os formatos das colunas na nova aba tratada:
+  - Formato numérico para colunas com valores.
+  - Formato de data para colunas de data.
 
 ---
 
 ## Atividades Realizadas - Data: 2025-06-14
+- Identifiquei o `id_cliente` como chave primária para integrar as tabelas `clientes_tratados`, `resumo_compras_tratados` e `transacoes_tratados`.
+- Automatizei a união de tabelas usando `ARRAYFORMULA` + `PROCV`:
 
-- Identifiquei as colunas-chave para unir as tabelas, usando o `id_cliente` como chave nas abas `clientes`, `resumo_compras` e `transacoes`.
-- Usei a função `ARRAYFORMULA` combinada com `PROCV` para automatizar a importação dos dados da aba `resumo_compras` para a aba `clientes`, trazendo as informações correspondentes com a fórmula:  
+  ```excel
+  =ARRAYFORMULA(SE(A2:A=""; ""; PROCV(A2:A; resumo_compras_tratados!A:B; 2; FALSO)))
+  ```
 
-```
-=ARRAYFORMULA(SE(A2:A=""; ""; PROCV(A2:A; resumo_compras!A:B; 2; FALSO)))
-```
-
-- Ajustei os intervalos e colunas para garantir que os dados fossem puxados corretamente considerando a posição dos IDs em cada aba.
-- Corrigi erros de fórmula que surgiram no processo para assegurar que a união das tabelas fosse automática, eficiente e sem falhas.
-- Finalizei a etapa garantindo que a aba `clientes` estivesse atualizada com as informações de `resumo_compras` e pronta para as próximas etapas do projeto.
+- Ajustei os intervalos de cada aba de acordo com a localização do `id_cliente` em cada planilha.
+- Corrigi erros de fórmula e validei os dados integrados para evitar falhas.
 
 ---
 
-
 ## Atividades Realizadas - Data: 2025-06-16
-- Iniciei a criação de novas variáveis derivadas a partir das tabelas existentes.
-- As novas variáveis permitem observar padrões de comportamento dos clientes, facilitando a análise.
+- Criei novas variáveis derivadas para enriquecer a análise do comportamento dos clientes.
 
-- As variáveis criadas foram:
+### Variáveis Criadas:
 
-  - mes_transacao: extraída a partir da data da transação com a função TEXTO(data_transacao; "MM"). Essa variável identifica o mês em que cada compra foi realizada.
+- **mes_transacao**: mês da transação a partir da data.
+
+  ```excel
+  =TEXTO(data_transacao; "MM")
   ```
-	 =TEXTO(data_transacao; "MM")
+
+- **ano_transacao**: ano da transação.
+
+  ```excel
+  =ANO(data_transacao)
   ```
-  - ano_transacao: obtida com a função ANO(data_transacao), permitindo analisar a distribuição das compras ao longo dos anos.
+
+- **ultima_transacao**: data da última compra por cliente.
+
+  ```excel
+  =MAXIFS(data_transacao; id_cliente; id_cliente)
   ```
-	 =ANO(data_transacao)
+
+- **frequencia**: número total de compras por cliente.
+
+  ```excel
+  =CONT.SE(intervalo_id_cliente; id_cliente)
   ```
-  - ultima_transacao: representa a data da última compra de cada cliente. Calculada com a função MAXIFS(data_transacao; id_cliente; id_cliente), permite medir a recência de compra.
+
+- **gasto_total_estimado**: soma dos gastos por categoria.
+
+  ```excel
+  =ARRAYFORMULA(total_vinho + total_frutas + total_carnes + total_peixes + total_doces + total_outros)
   ```
-	 =MAXIFS(data_transacao; id_cliente; id_cliente)
-  ```
-  - frequencia: número total de compras por cliente, calculado com a função 
-  ```
-	 =CONT.SE(intervalo_id_cliente; id_cliente)
-  ```
-  - gasto_total_estimado: estimativa do valor total gasto por cliente, obtida pela soma das quantidades de produtos comprados em diferentes categorias (vinho, frutas, carnes, peixes, doces e outros), usando a função ARRAYFORMULA(total_vinho + total_frutas + total_carnes + total_peixes + total_doces + total_outros).
-  ```
-	 =ARRAYFORMULA(total_vinho + total_frutas + total_carnes + total_peixes + total_doces + total_outros)
-  ```
+
 ---
